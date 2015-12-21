@@ -21,6 +21,8 @@ class Cluster:
     def __init__(self, bam, reads, cstrand):
         self.reads   = sorted(reads, key=lambda x: x.reference_start-x.query_alignment_start)
 
+        self.samples = self.getRG()
+
         self.cstrand = cstrand
         self.chrom   = bam.getrname(reads[0].reference_id)
 
@@ -44,6 +46,21 @@ class Cluster:
     def ins_strand(self):
         if self.cstrand == '+': return '-'
         return '+'
+
+    def getRG(self):
+        ''' return read groups from RG aux tag '''
+        RGs = []
+        for read in self.reads:
+            for tag, val in read.tags:
+                if tag == 'RG':
+                    RGs.append(val)
+
+        if len(RGs) > 0:
+            return ','.join(['%s|%d' % (rg,count) for rg, count in Counter(RGs).iteritems()])
+        else:
+            return 'NA'
+
+
 
 
     def sorted_mapped_seqs(self):
@@ -96,9 +113,14 @@ class Cluster:
         return 'NA'
 
     def __str__(self):
-        return '%s\t%d\t%d\t%d\t%s\t%d\t%d\t%d\t%d\t%f\t%f' % (self.chrom, self.minpos, self.maxpos, self.maxpos-self.minpos, 
-                                                       self.ins_strand(), len(self.reads), self.uniqaln, self.start_spread, 
-                                                       self.stop_spread, self.mean_mq, self.mean_match)
+        fields = (self.chrom, self.minpos, self.maxpos, self.samples, self.maxpos-self.minpos, 
+                  self.ins_strand(), len(self.reads), self.uniqaln, self.start_spread, 
+                  self.stop_spread, self.mean_mq, self.mean_match) 
+
+        fields = map(str, fields)
+
+        return '\t'.join(fields)
+
 
 
 def consensus(seqs, minscore=0.95):
@@ -234,7 +256,7 @@ def main(args):
 
     clusters = build_clusters(bam)
 
-    fields = ['Chrom', 'Peak_Start', 'Peak_End', 'Peak_Width', 'Ins_Strand', 'Total_Reads', 'Unique_Alignments', 'Start_Spread', 'End_Spread', 'Mean_MapQ', 'Mean_Matchpct']
+    fields = ['Chrom', 'Peak_Start', 'Peak_End', 'Samples', 'Peak_Width', 'Ins_Strand', 'Total_Reads', 'Unique_Alignments', 'Start_Spread', 'End_Spread', 'Mean_MapQ', 'Mean_Matchpct']
     fields += ['Mappability', 'Ref_Ins', 'Nonref_Ins', 'Consensus_Score', 'Consensus_Homopolymer_Frac', 'Consensus_Seq']
 
     print '\t'.join(fields)
@@ -248,7 +270,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Analyse L1-seq data (e.g. Ewing and Kazazian Genome Res. 2010)')
-    parser.add_argument('-b', '--bam', required=True, help='Input BAM')
+    parser.add_argument('-b', '--bam', required=True, help='Input BAM (for multiple samples merge with distinct readgroups)')
     parser.add_argument('-m', '--map', required=True, help='Mappability Tabix')
     parser.add_argument('--nonref', required=True, help='Nonref insertion tabix')
     parser.add_argument('--ref', required=True, help='Reference insertion tabix')
