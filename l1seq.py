@@ -22,6 +22,7 @@ class Cluster:
         self.reads   = sorted(reads, key=lambda x: x.reference_start-x.query_alignment_start)
 
         self.samples = self.getRG()
+        self.scount  = len(self.samples.split(','))
 
         self.cstrand = cstrand
         self.chrom   = bam.getrname(reads[0].reference_id)
@@ -47,6 +48,7 @@ class Cluster:
         if self.cstrand == '+': return '-'
         return '+'
 
+
     def getRG(self):
         ''' return read groups from RG aux tag '''
         RGs = []
@@ -59,8 +61,6 @@ class Cluster:
             return ','.join(['%s|%d' % (rg,count) for rg, count in Counter(RGs).iteritems()])
         else:
             return 'NA'
-
-
 
 
     def sorted_mapped_seqs(self):
@@ -113,7 +113,7 @@ class Cluster:
         return 'NA'
 
     def __str__(self):
-        fields = (self.chrom, self.minpos, self.maxpos, self.samples, self.maxpos-self.minpos, 
+        fields = (self.chrom, self.minpos, self.maxpos, str(self.scount), self.samples, self.maxpos-self.minpos, 
                   self.ins_strand(), len(self.reads), self.uniqaln, self.start_spread, 
                   self.stop_spread, self.mean_mq, self.mean_match) 
 
@@ -256,7 +256,7 @@ def main(args):
 
     clusters = build_clusters(bam)
 
-    fields = ['Chrom', 'Peak_Start', 'Peak_End', 'Samples', 'Peak_Width', 'Ins_Strand', 'Total_Reads', 'Unique_Alignments', 'Start_Spread', 'End_Spread', 'Mean_MapQ', 'Mean_Matchpct']
+    fields = ['Chrom', 'Peak_Start', 'Peak_End', 'Sample_Count', 'Samples', 'Peak_Width', 'Ins_Strand', 'Total_Reads', 'Unique_Alignments', 'Start_Spread', 'End_Spread', 'Mean_MapQ', 'Mean_Matchpct']
     fields += ['Mappability', 'Ref_Ins', 'Nonref_Ins', 'Consensus_Score', 'Consensus_Homopolymer_Frac', 'Consensus_Seq']
 
     print '\t'.join(fields)
