@@ -164,7 +164,7 @@ def consensus(seqs, minscore=0.95):
                 align_end = locate_subseq(seq, a2)[1]
                 cons += seq[align_end:]
 
-    return cons, np.mean(score)
+    return cons, np.mean(scores)
 
 
 def locate_subseq(longseq, shortseq):
