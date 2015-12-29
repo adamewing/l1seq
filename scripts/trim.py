@@ -22,11 +22,15 @@ def qualtrim(qstring):
 def avg(L): return sum(L) / float(len(L))
 
 
-if len(sys.argv) == 2:
+if len(sys.argv) >= 2:
 
     n = 0
     reads = 0
     wrote = 0
+
+    trimbp = 21
+
+    if len(sys.argv) == 3: trimbp = int(sys.argv[2])
 
     assert sys.argv[1].endswith('.gz'), "files should be gzipped and end in .gz: %s" % sys.argv[1]
 
@@ -46,7 +50,7 @@ if len(sys.argv) == 2:
 
             elif n == 1: # seq
                 origseq = line.strip()
-                trimseq = origseq[21:]
+                trimseq = origseq[trimbp:]
                 n += 1
                 
             elif n == 2: n += 1 # comment
@@ -54,7 +58,7 @@ if len(sys.argv) == 2:
             elif n == 3: #qual
                 origqual = line.strip()
 
-                trimqual = qualtrim(origqual[21:])
+                trimqual = qualtrim(origqual[trimbp:])
                 trimseq  = trimseq[:len(trimqual)]
 
                 if len(trimseq) >= 50:
@@ -71,4 +75,4 @@ if len(sys.argv) == 2:
     logger.info("done parsing %d reads, wrote %d reads." % (reads, wrote))
 
 else:
-    print "usage:", sys.argv[0], "<fq.gz>"
+    print "usage:", sys.argv[0], "<fq.gz> <BASES (default = 21)>"
