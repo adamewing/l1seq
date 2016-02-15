@@ -93,7 +93,10 @@ class Cluster:
 
     def refelt(self, reftabix, window=500):
         if self.chrom in reftabix.contigs:
-            for rec in reftabix.fetch(self.chrom, self.minpos-window, self.maxpos+window):
+            minpos = self.minpos-window
+            if minpos < 0: minpos = 0
+
+            for rec in reftabix.fetch(self.chrom, minpos, self.maxpos+window):
                 rchrom, rstart, rend, rfam, rmillidiv, rstr = rec.strip().split()
 
                 if rstr == self.ins_strand() == '+' and int(rstart) < self.minpos:
