@@ -203,7 +203,7 @@ def pass_read(read, minq=1, max_distal_clip=5, minmatch=0.98):
     return True
 
 
-def build_clusters(bam, window=200, minq=1, minmatch=0.98):
+def build_clusters(bam, chrom=None, window=200, minq=1, minmatch=0.98):
     ''' single pass to group reads into clusters '''
 
     clusters = []
@@ -211,7 +211,14 @@ def build_clusters(bam, window=200, minq=1, minmatch=0.98):
     pile_plus  = []
     pile_minus = []
 
-    for read in bam.fetch():
+    bam_iter = None
+
+    if chrom is None:
+        bam_iter = bam.fetch()
+    else:
+        bam_iter = bam.fetch(chrom)
+
+    for read in bam_iter:
         if pass_read(read, minq=minq, minmatch=minmatch):
             if read.is_reverse:
                 if len(pile_minus) == 0:
@@ -253,11 +260,14 @@ def main(args):
 
     bam = pysam.AlignmentFile(args.bam, 'rb')
 
+    if args.chrom is not None:
+        assert args.chrom in bam.references, 'chromosome %s not in %s' % (args.chrom, args.bam)
+
     maptbx = pysam.Tabixfile(args.map)
     reftbx = pysam.Tabixfile(args.ref)
     nrtbx  = pysam.Tabixfile(args.nonref)
 
-    clusters = build_clusters(bam, window=int(args.window), minq=int(args.minmapq), minmatch=float(args.minmatch))
+    clusters = build_clusters(bam, chrom=args.chrom, window=int(args.window), minq=int(args.minmapq), minmatch=float(args.minmatch))
 
     fields = ['Chrom', 'Peak_Start', 'Peak_End', 'Sample_Count', 'Samples', 'Peak_Width', 'Ins_Strand', 'Total_Reads', 'Unique_Alignments', 'Start_Spread', 'End_Spread', 'Mean_MapQ', 'Mean_Matchpct']
     fields += ['Mappability', 'Ref_Ins', 'Nonref_Ins', 'Consensus_Score', 'Consensus_Homopolymer_Frac', 'Consensus_Seq']
@@ -277,6 +287,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', '--map', required=True, help='Mappability Tabix')
     parser.add_argument('--nonref', required=True, help='Nonref insertion tabix')
     parser.add_argument('--ref', required=True, help='Reference insertion tabix')
+    parser.add_argument('-c', '--chrom', default=None, help='analyse one chromosome')
     parser.add_argument('--minmatch', default=0.98, help='minimum match percent vs. ref (default = 0.98)')
     parser.add_argument('--window', default=200, help='search window size for next read in cluster (default = 200)')
     parser.add_argument('--minmapq', default=1, help='minimum mapping quality (default = 1)')
