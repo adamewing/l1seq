@@ -53,4 +53,4 @@ samtools index merged_samples.bam
 ### Additional Information
 
 * The memory footprint may be quite large when run over a large BAM file (e.g. when many samples are merged). The `-c/--chrom` option may be used to limit the run to a single chromosome thus decreasing the memory requirement.
-* This tool is **not** intended for any other data type (e.g. capture sequencing, WGS). (TEBreak)[https://github.com/adamewing/tebreak] is one option for performing these analyses.
+* This tool is **not** intended for any other data type (e.g. capture sequencing, WGS). TEBreak [https://github.com/adamewing/tebreak] is one option for performing these analyses.
