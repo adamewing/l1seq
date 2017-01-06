@@ -9,6 +9,7 @@ import numpy as np
 import align
 
 from collections import Counter
+from string import maketrans
 
 import logging
 logger = logging.getLogger(__name__)
@@ -63,9 +64,18 @@ class Cluster:
             return 'NA'
 
 
-    def sorted_mapped_seqs(self):
+    def sorted_mapped_seqs(self, invert_minus=False):
         ''' return reads in genomic order '''
-        return [read.query_sequence for read in self.reads]
+
+        if not invert_minus:
+            return [read.query_sequence for read in self.reads]
+
+
+        if self.ins_strand == '+':
+            return [read.query_sequence for read in self.reads]
+
+        else:
+            return [rc(read.query_sequence) for read in self.reads[::-1]]
 
 
     def mapscore(self, maptabix):
@@ -124,6 +134,11 @@ class Cluster:
 
         return '\t'.join(fields)
 
+
+def rc(dna):
+    ''' reverse complement '''
+    complements = maketrans('acgtrymkbdhvACGTRYMKBDHV', 'tgcayrkmvhdbTGCAYRKMVHDB')
+    return dna.translate(complements)[::-1]
 
 
 def consensus(seqs, minscore=0.95):
@@ -275,7 +290,7 @@ def main(args):
     print '\t'.join(fields)
 
     for cluster in clusters:
-        seqs = cluster.sorted_mapped_seqs()
+        seqs = cluster.sorted_mapped_seqs(invert_minus=args.invert_minus)
         logger.info('Building consensus: %s' % str(cluster))
         cons, cons_score = consensus(seqs)
         print '\t'.join((str(cluster), str(cluster.mapscore(maptbx)), cluster.refelt(reftbx), cluster.nonref(nrtbx), str(cons_score), str(homopol_filter(cons)), cons))
@@ -291,6 +306,7 @@ if __name__ == '__main__':
     parser.add_argument('--minmatch', default=0.98, help='minimum match percent vs. ref (default = 0.98)')
     parser.add_argument('--window', default=200, help='search window size for next read in cluster (default = 200)')
     parser.add_argument('--minmapq', default=1, help='minimum mapping quality (default = 1)')
+    parser.add_argument('--invert_minus', default=False, action='store_true', help='reverse consensus building direction for reverse oriented insertions')
 
     args = parser.parse_args()
     main(args)
