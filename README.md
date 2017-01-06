@@ -25,17 +25,17 @@ python setup.py install
 Instructions, assuming L1-seq results have been aligned to the human reference genome e.g. via bwa or bowtie2:
 
 1. Build mappability tabix:
-```
-cd ref
-./make_human_mappability.sh
-```
+    ```
+    cd ref
+    ./make_human_mappability.sh
+    ```
 
 2. Run l1seq.py:
-```
-./l1seq.py \
--b l1seq.alignment.bam \
--m ref/hsMap50bp.bed.gz \
---ref ref/hg19.primateL1.bed.gz \
---nonref ref/L1.master.0.bed.gz \
-> l1seq.results.tsv
-```
+    ```
+    ./l1seq.py \
+    -b l1seq.alignment.bam \
+    -m ref/hsMap50bp.bed.gz \
+    --ref ref/hg19.primate.L1.bed.gz \
+    --nonref ref/hg19.nonref.L1.bed.gz \
+    > l1seq.results.tsv
+    ```
