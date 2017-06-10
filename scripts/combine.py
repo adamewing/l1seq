@@ -81,7 +81,7 @@ if len(sys.argv) > 2:
             for i, line in enumerate(tsv):
                 if i == 0:
                     if header:
-                        assert len(header) == len(line.strip().split()), 'header mismatch on file: %s' % fn
+                        assert len(header) == len(line.strip().split()), 'header mismatch on file: ' + fn
                     else:
                         header = line.strip().split()
 
@@ -97,6 +97,12 @@ if len(sys.argv) > 2:
 
                 for j, c in enumerate(cols):
                     rec[header[j]] = c
+
+                try:
+                    int(rec['Peak_Start'])
+                except:
+                    logger.warn('WARNING, improperly formatted record on %s line %d : %s' % (fn, i, line.strip()))
+                    continue
 
                 if rec['Chrom'] not in forest:
                     glob_uuid = str(uuid4())
